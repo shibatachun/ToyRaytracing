@@ -4,6 +4,7 @@
 
 #include "stb_image_write_adapter.h"
 #include "hittable.h"
+#include <thread>
 
 class camera {
 public:
@@ -12,35 +13,43 @@ public:
 	int channels = 3;
 	int samples_per_pixel = 10;
 	int max_depth = 10;
+	std::vector<std::thread> threads;
+	
 	void render(const hittable& world)
 	{
 		initialize();
+		
 		std::vector<unsigned char> image_data(image_width * image_height * channels);
-
 		for (int j = 0; j < image_height; j++)
 		{
 			std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-			for (int i = 0; i < image_width; i++)
-			{
-				color pixel_color(0, 0, 0);
-				//auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-				//auto ray_direction = pixel_center - center;
-				//ray r(center, ray_direction);
-				//color pixel_color = ray_color(r, world);
-				for (int sample = 0; sample < samples_per_pixel; sample++)
-				{
-					ray r = get_ray(i, j);
-					pixel_color += ray_color(r, max_depth, world);
-				}
-				write_color(image_data, pixel_samples_scale*pixel_color, i, j, image_width, image_height, channels);
-
-			}
+			//std::thread temp(&camera::render_row,this, j, std::ref(image_data), std::ref(world)); 左值引用，不能使用！！
+			threads.emplace_back(std::thread(&camera::render_row, this, j, std::ref(image_data), std::ref(world)));
+			
+		}
+		for (auto& t : threads)
+		{
+			t.join();
 		}
 		std::clog << "\rDone.                        \n";
 		stbi_write_png("image.png", image_width, image_height, channels, image_data.data(), image_width * channels);
 		std::cout << "Image saved to output.png\n";
 		
 	}
+	void render_row(int j, std::vector<unsigned char>& image_data, const hittable& world)
+	{
+		for (int i = 0; i < image_width; ++i)
+		{
+			color pixel_color(0, 0, 0);
+			for (int sample = 0; sample < samples_per_pixel; ++sample)
+			{
+				ray r = get_ray(i, j);
+				pixel_color += ray_color(r, max_depth, world);
+			}
+			write_color(image_data, pixel_samples_scale * pixel_color, i, j, image_width, image_height, channels);
+		}
+	}
+	
 private:
 	int image_height;
 	double pixel_samples_scale;
@@ -48,6 +57,7 @@ private:
 	point3 pixel00_loc;
 	vec3 pixel_delta_u;
 	vec3 pixel_delta_v;
+	
 	void initialize()
 	{
 		image_height = int(image_width / aspect_ratio);
