@@ -42,6 +42,17 @@ public:
 		return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
 	}
 
+	static vec3 random()
+	{
+		return vec3(random_double(), random_double(), random_double());
+	}
+	static vec3 random(double min, double max)
+	{
+		return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+	}
+
+	
+
 
 private:
 
@@ -93,6 +104,33 @@ inline vec3 cross(const vec3& u, const vec3& v)
 inline vec3 unit_vector(const vec3& v)
 {
 	return v / v.length();
+}
+
+inline vec3 random_unit_vector()
+{
+	//这里的作用是随机在单位球内生成一个向量，并且求出这个向量的长度。如果在球内，把它移到表面进行漫反射计算
+	while (true)
+	{
+		auto p = vec3::random(-1, 1);
+		auto lensq = p.length_squared();
+		if (1e-160 < lensq && lensq <= 1)
+		{
+			return p / sqrt(lensq);
+		}
+	}
+}
+inline vec3 random_on_hemisphere(const vec3& normal)
+{
+	vec3 on_unit_sphere = random_unit_vector();
+	if (dot(on_unit_sphere, normal) > 0.0)
+	{
+		return on_unit_sphere;
+		
+	}
+	else
+	{
+		return -on_unit_sphere;
+	}
 }
 #endif
 
