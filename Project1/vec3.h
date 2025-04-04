@@ -1,8 +1,6 @@
 #ifndef VEC3_H
 #define VEC3_H
-
-#include <cmath>
-#include <iostream>
+#include "common.h"
 
 class  vec3
 {
