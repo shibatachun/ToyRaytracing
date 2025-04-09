@@ -143,6 +143,7 @@
     <ClInclude Include="sphere.h" />
     <ClInclude Include="stb_image_write.h" />
     <ClInclude Include="stb_image_write_adapter.h" />
+    <ClInclude Include="Threadpool.h" />
     <ClInclude Include="vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
